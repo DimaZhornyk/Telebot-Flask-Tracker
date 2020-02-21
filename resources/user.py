@@ -9,18 +9,6 @@ _user_parser.add_argument('username', type=str, required=True, help='This field 
 _user_parser.add_argument('password', type=str, required=True, help='This field cannot be left blank')
 
 
-class UserRegister(Resource):
-
-    def post(self):
-        conn = engine.connect()
-        data = _user_parser.parse_args()
-        if conn.execute(select([Users.c.id]).where(Users.c.username == data['username'])).fetchall():
-            return {'message': "User already exists"}, 400
-
-        conn.execute(Users.insert().values(username=data['username'], password=data['password']))
-        return {'message': "User created successfully"}
-
-
 class UserLogin(Resource):
 
     @classmethod
