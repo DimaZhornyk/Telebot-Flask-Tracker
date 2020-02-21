@@ -7,5 +7,5 @@
 * #### /worker(DELETE)      example body: {"name": "Vasya", "surname": "Voylov"}:exclamation: requires JWT (deletes a worker from a global table)
 * #### /(GET)        returns main page with table
 * #### /locations(GET) returns locations table
-####(Any other GETs will be redirected to '/')
+#### (Any other GETs will be redirected to '/')
  
