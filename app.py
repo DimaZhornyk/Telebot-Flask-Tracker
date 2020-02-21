@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from connection import engine, Locations, Global
 from resources.location import Location
-from resources.user import UserRegister, UserLogin
+from resources.user import UserLogin
 from resources.worker import Worker
 
 app = Flask(__name__)
@@ -37,7 +37,6 @@ def allGets(page):
 
 
 api.add_resource(Location, '/location/')
-api.add_resource(UserRegister, '/register/')
 api.add_resource(UserLogin, '/login/')
 api.add_resource(Worker, '/worker/')
 
