@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, Float, ForeignKey, DateTime
 
 engine = create_engine("sqlite:///db.sqlite")
 metadata = MetaData()
@@ -24,5 +24,13 @@ Users = Table('Users', metadata,
               Column('id', Integer, primary_key=True),
               Column('username', String),
               Column('password', String))
+History = Table('History', metadata,
+                Column('user_id', Integer),
+                Column('hours', Integer),
+                Column('minutes', Integer),
+                Column('time', Integer),
+                Column('project', String),
+                Column('work', String),
+                )
 metadata.create_all(engine)
 conn = engine.connect()

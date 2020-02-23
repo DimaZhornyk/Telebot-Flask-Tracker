@@ -1,6 +1,6 @@
 from sqlalchemy import select
 import telebot
-from connection import Locations, Global, engine
+from connection import Locations, Global, History, engine
 from telebot import types
 import time
 
@@ -70,7 +70,7 @@ def geo(message):
     if message.text[1:].isdigit():
         try:
             conn = engine.connect()
-            proj_ident = conn.execute(select([Locations.c.id])).fetchall()[int(message.text[1:])-1][0]
+            proj_ident = conn.execute(select([Locations.c.id])).fetchall()[int(message.text[1:]) - 1][0]
             conn.execute(Global.update().values(project_chosen=proj_ident).where(Global.c.id == message.chat.id))
             keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
             button_geo = types.KeyboardButton(text="Отправить местоположение", request_location=True)
@@ -198,8 +198,14 @@ def location_stopper(message):
                 full_hours = full_hours + (full_minutes // 60)
                 full_minutes = full_minutes % 60
             conn.execute(
-                Global.update().values(total_hours=full_hours, total_minutes=full_minutes, total_seconds=full_secounds).where(
+                Global.update().values(total_hours=full_hours, total_minutes=full_minutes,
+                                       total_seconds=full_secounds).where(
                     Global.c.id == message.chat.id))
+
+            conn.execute(
+                History.insert().values(user_id=message.chat.id, hours=hours, minutes=minutes,
+                                        time=time.time(), project=last_project_name_from_base,
+                                        work=last_job_from_base))
             bot.send_message(message.chat.id,
                              "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте {4} - {5}".format(
                                  hours, minutes, seconds, last_job_from_base, lastproject_from_base,
@@ -211,7 +217,6 @@ def location_stopper(message):
                              "Пользователь {0} {1} остановил таймер корректно, начав работу на обьекте {2} - {3}, делая {4}, записал себе {5} часов {6} минут {7} секунд".format(
                                  name_from_base, surname_from_base, lastproject_from_base, last_project_name_from_base,
                                  last_job_from_base, hours, minutes, seconds))
-
 
         else:
             minutes = 0
@@ -251,6 +256,10 @@ def location_stopper(message):
             conn.execute(
                 Global.update(total_hours=full_hours, total_minutes=full_minutes, total_seconds=full_secounds).where(
                     Global.c.id == message.chat.id))
+            conn.execute(
+                History.insert().values(user_id=message.chat.id, hours=hours, minutes=minutes,
+                                        time=time.time(), project=last_project_name_from_base,
+                                        work=last_job_from_base))
             bot.send_message(message.chat.id,
                              "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте {4} - {5}, но таймер был остановлен НЕКОРРЕКТНО".format(
                                  hours, minutes, seconds, message.text, lastproject_from_base,
