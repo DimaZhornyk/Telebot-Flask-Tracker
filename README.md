@@ -6,6 +6,7 @@
 * #### /location(DELETE)    example body: {"name": "home"}:exclamation: requires JWT (deletes location)
 * #### /worker(DELETE)      example body: {"name": "Vasya", "surname": "Ivanov"}:exclamation: requires JWT (deletes a worker from a global table)
 * #### /(GET)        returns main page with table
-* #### /locations(GET) returns locations table
-#### (Any other GETs will be redirected to '/')
+* #### /locations(POST) empty body,  returns locations table
+* #### /history(POST) example body: {"id": 1234567},  returns history of person's recordings to database
+####           (Any other GETs will be redirected to '/')
  
