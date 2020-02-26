@@ -11,7 +11,8 @@ class WorkerHistory(Resource):
         data = parser.parse_args()
         out = []
         for obj in History.find({"user_id": data['Telegram']}):
-            to_return = {"Telegram": obj["user_id"], "Hours": obj["hours"], "Minutes": obj["minutes"],
+            to_return = {"Telegram": obj["user_id"], "Name": obj["name"], "Surname": obj["surname"],
+                         "Hours": obj["hours"], "Minutes": obj["minutes"],
                          "Time": obj["time"],
                          "Project": obj["project"], "Work": obj["work"]}
             out.append(to_return)

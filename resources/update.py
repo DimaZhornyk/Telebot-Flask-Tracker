@@ -20,12 +20,12 @@ class Update(Resource):
         try:
             for obj in eval(data['toUpdate']):
                 Global.update_one({"tg_id": obj["Telegram"]},
-                                  {"$set": {"tg_id": int(obj["Telegram"]), "name": obj['Name'],
+                                  {"$set": {"name": obj['Name'],
                                             "surname": obj["Surname"], "total_hours": int(obj["Total hours"]),
                                             "total_minutes": int(obj["Total minutes"]),
                                             "total_seconds": int(obj["Total seconds"]),
                                             "last_project": obj["Last project"], "last_job": obj["Last job"]}})
 
         except:
-            pass
+            return {"message": "An error occurred when updating a user"}
         return {'message': "Successfully updated"}

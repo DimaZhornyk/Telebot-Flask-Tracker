@@ -1,9 +1,13 @@
-from telebot import types
+from telebot import types, apihelper
 import time
 import telebot
 from database import Locations, Global, History
 
 bot = telebot.TeleBot('973520242:AAH8WeGRmUNqKzYDdM1PCURHoojkNYWATwU')
+
+# apihelper.proxy = {
+#     'https': 'socks5h://127.127.127.127:12345'
+# }
 globaltime = {}
 
 
@@ -191,8 +195,10 @@ def location_stopper(message):
                               {"$set": {"total_hours": full_hours, "total_minutes": full_minutes,
                                         "total_seconds": full_secounds}})
 
-            History.insert_one({"user_id": message.chat.id, "hours": hours, "minutes": minutes, "time": time.time(),
-                                "project": last_project_name_from_base, "work": last_job_from_base, "correct": True})
+            History.insert_one(
+                {"user_id": message.chat.id, "name": name_from_base, "surname": surname_from_base, "hours": hours,
+                 "minutes": minutes, "time": time.time(),
+                 "project": last_project_name_from_base, "work": last_job_from_base, "correct": True})
             bot.send_message(message.chat.id,
                              "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте  {4}".format(
                                  hours, minutes, seconds, last_job_from_base, last_project_name_from_base))
@@ -239,8 +245,10 @@ def location_stopper(message):
                               {"$set": {"total_hours": full_hours, "total_minutes": full_minutes,
                                         "total_seconds": full_secounds}})
 
-            History.insert_one({"user_id": message.chat.id, "hours": hours, "minutes": minutes, "time": time.time(),
-                                "project": last_project_name_from_base, "work": last_job_from_base, "correct": False})
+            History.insert_one(
+                {"user_id": message.chat.id, "name": name_from_base, "surname": surname_from_base, "hours": hours,
+                 "minutes": minutes, "time": time.time(),
+                 "project": last_project_name_from_base, "work": last_job_from_base, "correct": False})
             bot.send_message(message.chat.id,
                              "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте {4}, но таймер был остановлен НЕКОРРЕКТНО".format(
                                  hours, minutes, seconds, message.text, last_project_name_from_base))
@@ -281,4 +289,4 @@ def free_time_function(message):
         bot.send_message(message.chat.id, "Ваше сообщение не корректно")
 
 
-bot.polling(none_stop=True, interval=0)
+bot.polling(none_stop=True, timeout=123)
