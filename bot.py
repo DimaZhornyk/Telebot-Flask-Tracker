@@ -41,9 +41,7 @@ def surname_listener(message):
     Global.insert_one({"tg_id": message.chat.id,
                        "name": message.text,
                        "surname": "",
-                       "total_hours": 0,
-                       "total_minutes": 0,
-                       "total_seconds": 0,
+                       "total_time": "0:0:0",
                        "last_project": "",
                        "last_job": "",
                        "last_lat": 0,
@@ -173,12 +171,12 @@ def location_stopper(message):
 
             Global.update_one({"tg_id": message.chat.id},
                               {"$set": {"last_lat": message.location.latitude, "last_lng": message.location.longitude}})
+            time_list = user_dict['total_time'].split(":")
+            hours_from_base = int(time_list[0])
 
-            hours_from_base = user_dict['total_hours']
+            minutes_from_base = int(time_list[1])
 
-            minutes_from_base = user_dict['total_minutes']
-
-            seconds_from_base = user_dict['total_seconds']
+            seconds_from_base = int(time_list[2])
 
             full_hours = hours + hours_from_base
             full_minutes = minutes + minutes_from_base
@@ -189,13 +187,13 @@ def location_stopper(message):
             if full_minutes >= 60:
                 full_hours = full_hours + (full_minutes // 60)
                 full_minutes = full_minutes % 60
+            time_totally = str(full_hours) + ":" + str(full_minutes) + ":" + str(full_secounds)
             Global.update_one({"tg_id": message.chat.id},
-                              {"$set": {"total_hours": full_hours, "total_minutes": full_minutes,
-                                        "total_seconds": full_secounds}})
-
+                              {"$set": {"total_time": time_totally}})
+            fresh_time = str(hours) + ":" + str(minutes) + ":" + str(seconds)
             History.insert_one(
-                {"user_id": message.chat.id, "name": name_from_base, "surname": surname_from_base, "hours": hours,
-                 "minutes": minutes, "time": time.time(),
+                {"user_id": message.chat.id, "name": name_from_base, "surname": surname_from_base,
+                 "time_written": fresh_time, "time": time.time(),
                  "project": last_project_name_from_base, "work": last_job_from_base, "correct": True})
             bot.send_message(message.chat.id,
                              "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте  {4}".format(
@@ -224,11 +222,12 @@ def location_stopper(message):
             Global.update_one({"tg_id": message.chat.id},
                               {"$set": {"last_lat": message.location.latitude, "last_lng": message.location.longitude}})
 
-            hours_from_base = user_dict['total_hours']
+            time_list = user_dict['total_time'].split(":")
+            hours_from_base = int(time_list[0])
 
-            minutes_from_base = user_dict['total_minutes']
+            minutes_from_base = int(time_list[1])
 
-            seconds_from_base = user_dict['total_seconds']
+            seconds_from_base = int(time_list[2])
 
             full_hours = hours + hours_from_base
             full_minutes = minutes + minutes_from_base
@@ -239,13 +238,13 @@ def location_stopper(message):
             if full_minutes >= 60:
                 full_hours = full_hours + (full_minutes // 60)
                 full_minutes = full_minutes % 60
+            time_totally = str(full_hours) + ":" + str(full_minutes) + ":" + str(full_secounds)
             Global.update_one({"tg_id": message.chat.id},
-                              {"$set": {"total_hours": full_hours, "total_minutes": full_minutes,
-                                        "total_seconds": full_secounds}})
-
+                              {"$set": {"total_time": time_totally}})
+            fresh_time = str(hours) + ":" + str(minutes) + ":" + str(seconds)
             History.insert_one(
-                {"user_id": message.chat.id, "name": name_from_base, "surname": surname_from_base, "hours": hours,
-                 "minutes": minutes, "time": time.time(),
+                {"user_id": message.chat.id, "name": name_from_base, "surname": surname_from_base,
+                 "time_written": fresh_time, "time": time.time(),
                  "project": last_project_name_from_base, "work": last_job_from_base, "correct": False})
             bot.send_message(message.chat.id,
                              "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте {4}, но таймер был остановлен НЕКОРРЕКТНО".format(
@@ -267,16 +266,9 @@ def location_stopper(message):
 @bot.message_handler(commands=['time', 'stop', 'begin'])
 def free_time_function(message):
     if message.text == "/time":
-        user_dict = Global.find_one({"tg_id": message.chat.id})
-        hours_from_base = user_dict['total_hours']
-
-        minutes_from_base = user_dict['total_minutes']
-
-        seconds_from_base = user_dict['total_seconds']
-
+        time_value = Global.find_one({"tg_id": message.chat.id})["total_time"]
         bot.send_message(message.chat.id,
-                         "Ваше время: {0} часов , {1} минут , {2} секунд".format(hours_from_base, minutes_from_base,
-                                                                                 seconds_from_base))
+                         f"Ваше время: {time_value}")
 
     elif message.text == "/begin":
         project_choice(message)

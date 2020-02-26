@@ -12,7 +12,7 @@ class WorkerHistory(Resource):
         out = []
         for obj in History.find({"user_id": data['Telegram']}):
             to_return = {"Telegram": obj["user_id"], "Name": obj["name"], "Surname": obj["surname"],
-                         "Hours": obj["hours"], "Minutes": obj["minutes"],
+                         "Time written": obj['time_written'],
                          "Time": obj["time"],
                          "Project": obj["project"], "Work": obj["work"]}
             out.append(to_return)
@@ -26,8 +26,7 @@ class Home(Resource):
             context = []
             for obj in Global.find():
                 data = {"Telegram": obj["tg_id"], "Name": obj["name"], "Surname": obj["surname"],
-                        "Total hours": obj["total_hours"],
-                        "Total minutes": obj["total_minutes"], "Total seconds": obj["total_seconds"],
+                        "Total time": obj["total_time"],
                         "Last project": Locations.find_one({"_id": obj["last_project"]})['name'],
                         "Last job": obj["last_job"]}
                 context.append(data)

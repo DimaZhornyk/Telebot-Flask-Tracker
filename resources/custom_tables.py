@@ -30,8 +30,7 @@ class ReturnCustomTable(Resource):
                 obj = Global.find_one({"tg_id": worker_tg})
                 if obj:
                     to_return = {"Telegram": obj["tg_id"], "Name": obj["name"], "Surname": obj["surname"],
-                                 "Total hours": obj["total_hours"],
-                                 "Total minutes": obj["total_minutes"], "Total seconds": obj["total_seconds"],
+                                 "Total time": obj["total_time"],
                                  "Last project": Locations.find_one({"_id": obj["last_project"]})['name'],
                                  "Last job": obj["last_job"], "Last latitude": obj['last_lat'],
                                  "Last longitude": obj['last_lng']}

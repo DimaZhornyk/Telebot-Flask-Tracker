@@ -21,9 +21,7 @@ class Update(Resource):
             for obj in eval(data['toUpdate']):
                 Global.update_one({"tg_id": obj["Telegram"]},
                                   {"$set": {"name": obj['Name'],
-                                            "surname": obj["Surname"], "total_hours": int(obj["Total hours"]),
-                                            "total_minutes": int(obj["Total minutes"]),
-                                            "total_seconds": int(obj["Total seconds"]),
+                                            "surname": obj["Surname"], "total_time": obj["Total time"],
                                             "last_project": obj["Last project"], "last_job": obj["Last job"]}})
 
         except:
