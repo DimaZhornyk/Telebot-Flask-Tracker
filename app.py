@@ -9,6 +9,8 @@ from resources.location import Location
 from resources.update import Update
 from resources.user import UserLogin
 from resources.gets import WorkerHistory, LocationsView, Home
+from resources.table_names import TableNames
+from resources.tables import Tables
 from flask_cors import CORS
 
 app = Flask(__name__,
@@ -22,6 +24,8 @@ app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=1800)
 jwt = JWTManager(app)
 
 api.add_resource(Home, '/')
+api.add_resource(TableNames, '/table_names')
+api.add_resource(Tables, '/tables')
 api.add_resource(LocationsView, '/locations/')
 api.add_resource(Location, '/location/')
 api.add_resource(UserLogin, '/login/')
