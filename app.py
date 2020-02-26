@@ -1,5 +1,4 @@
 from datetime import timedelta
-
 from flask_jwt_extended import JWTManager
 from flask_restful import Api
 from flask import Flask, redirect
@@ -7,7 +6,6 @@ from flask import Flask, redirect
 from resources.location import Location
 from resources.update import Update
 from resources.user import UserLogin
-from resources.worker import Worker
 from resources.gets import WorkerHistory, LocationsView, Home
 
 app = Flask(__name__)
@@ -20,7 +18,6 @@ api.add_resource(Home, '/')
 api.add_resource(LocationsView, '/locations/')
 api.add_resource(Location, '/location/')
 api.add_resource(UserLogin, '/login/')
-api.add_resource(Worker, '/worker/')
 api.add_resource(WorkerHistory, '/history/')
 api.add_resource(Update, '/update/')
 

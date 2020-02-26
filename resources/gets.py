@@ -1,33 +1,42 @@
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource, reqparse
-from sqlalchemy import select
-from connection import engine, History, Global, Locations
+from database import History, Global, Locations
 
 
 class WorkerHistory(Resource):
     @jwt_required
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('id', type=int, required=True, help='Id cannot be left blank')
+        parser.add_argument('Telegram', type=int, required=True, help='Id cannot be left blank')
         data = parser.parse_args()
-        conn = engine.connect()
-        out = conn.execute(select([History]).where(History.c.user_id == data['id'])).fetchall()
-        return {'message': [dict(row) for row in out]}
+        out = []
+        for obj in History.find({"user_id": data['Telegram']}):
+            to_return = {"Telegram": obj["user_id"], "Hours": obj["hours"], "Minutes": obj["minutes"],
+                         "Time": obj["time"],
+                         "Project": obj["project"], "Work": obj["work"]}
+            out.append(to_return)
+        return {'message': out}
 
 
 class Home(Resource):
     @jwt_required
     def get(self):
-        conn = engine.connect()
-        data = conn.execute(select(
-            [Global.c.id, Global.c.name, Global.c.surname, Global.c.total_hours, Global.c.total_minutes,
-             Global.c.last_project, Global.c.last_job])).fetchall()
-        return {'message': [dict(row) for row in data]}
+        ans = []
+        for obj in Global.find():
+            data = {"Telegram": obj["tg_id"], "Name": obj["name"], "Surname": obj["surname"],
+                    "Total hours": obj["total_hours"],
+                    "Total minutes": obj["total_minutes"], "Total seconds": obj["total_seconds"],
+                    "Last project": Locations.find_one({"_id": obj["last_project"]})['name'],
+                    "Last job": obj["last_job"]}
+            ans.append(data)
+        return {'message': ans}
 
 
 class LocationsView(Resource):
     @jwt_required
     def post(self):
-        conn = engine.connect()
-        data = conn.execute(select([Locations.c.id, Locations.c.name, Locations.c.lat, Locations.c.lng])).fetchall()
-        return {'message': [dict(row) for row in data]}
+        ans = []
+        for obj in Locations.find():
+            to_return = {"Name": obj["name"], "Latitude": obj["lat"], "Longitude": obj["lng"]}
+            ans.append(to_return)
+        return {'message': ans}
