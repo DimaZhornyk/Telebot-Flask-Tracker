@@ -18,20 +18,6 @@ class WorkerHistory(Resource):
         return {'message': out}
 
 
-class Home(Resource):
-    @jwt_required
-    def get(self):
-        ans = []
-        for obj in Global.find():
-            data = {"Telegram": obj["tg_id"], "Name": obj["name"], "Surname": obj["surname"],
-                    "Total hours": obj["total_hours"],
-                    "Total minutes": obj["total_minutes"], "Total seconds": obj["total_seconds"],
-                    "Last project": Locations.find_one({"_id": obj["last_project"]})['name'],
-                    "Last job": obj["last_job"]}
-            ans.append(data)
-        return {'message': ans}
-
-
 class LocationsView(Resource):
     @jwt_required
     def post(self):
