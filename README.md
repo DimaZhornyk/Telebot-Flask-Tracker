@@ -7,6 +7,8 @@
 * #### /locations(POST) empty body,  returns locations table :exclamation: requires JWT
 * #### /history(POST) example body: {"Telegram": 1234567},  returns history of person's recordings to database :exclamation: requires JWT
 * #### /update(POST) example body: {"toDelete": [],"toUpdate": [[{"Telegram": 403316002, "Name":"Vaa", "Surname": "Ivanov", "Total hours": 123, "Total minutes": 23, "Total seconds":44,"Last project":"11", "Last job":"Work"}]]}  :exclamation: requires JWT
+* #### /createCustomTable(POST) example body: {"name": "CustomTable1","workers": [[403316002,43253546,45343]]} :exclamation: requires JWT
+* #### /customTable(POST) example body: {"name":"CustomTable1"} :exclamation: requires JWT  (returns you a custom table with a given name)
 * #### /(GET)        returns index.html
 ####           (Any other GETs will be redirected to '/')
  
