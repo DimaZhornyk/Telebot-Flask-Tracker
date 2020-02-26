@@ -8,7 +8,7 @@ from resources.custom_tables import CreateCustomTable, ReturnCustomTable
 from resources.location import Location
 from resources.update import Update
 from resources.user import UserLogin
-from resources.gets import WorkerHistory, LocationsView
+from resources.gets import WorkerHistory, LocationsView, Home
 from flask_cors import CORS
 
 app = Flask(__name__,
@@ -21,23 +21,7 @@ app.secret_key = 'sssss'
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=1800)
 jwt = JWTManager(app)
 
-
-@app.route('/', methods=['GET'])
-def home():
-    try:
-        context = []
-        for obj in Global.find():
-            data = {"Telegram": obj["tg_id"], "Name": obj["name"], "Surname": obj["surname"],
-                    "Total hours": obj["total_hours"],
-                    "Total minutes": obj["total_minutes"], "Total seconds": obj["total_seconds"],
-                    "Last project": Locations.find_one({"_id": obj["last_project"]})['name'],
-                    "Last job": obj["last_job"]}
-            context.append(data)
-        return {"message": context}
-    except:
-        return {"message": "Exception occurred"}
-
-
+api.add_resource(Home, '/')
 api.add_resource(LocationsView, '/locations/')
 api.add_resource(Location, '/location/')
 api.add_resource(UserLogin, '/login/')
