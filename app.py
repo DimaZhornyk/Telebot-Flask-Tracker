@@ -20,7 +20,7 @@ app = Flask(__name__,
 api = Api(app)
 CORS(app)
 app.secret_key = 'sssss'
-app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=1800)
+app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=6000)
 jwt = JWTManager(app)
 
 api.add_resource(Home, '/')
