@@ -1,15 +1,9 @@
 from datetime import timedelta
 from flask_jwt_extended import JWTManager
 from flask_restful import Api
-from flask import Flask, redirect, render_template
-
-from database import Global, Locations
-from resources.custom_tables import CreateCustomTable, ReturnCustomTable
-from resources.location import Location
-from resources.update import Update
+from flask import Flask, redirect
 from resources.user import UserLogin
-from resources.gets import WorkerHistory, LocationsView, Home
-from resources.table_names import TableNames
+from resources.table_names import TableNames, RequiredFields
 from resources.tables import Tables
 from flask_cors import CORS
 
@@ -23,16 +17,16 @@ app.secret_key = 'sssss'
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=6000)
 jwt = JWTManager(app)
 
-api.add_resource(Home, '/')
+
+@app.route('/', methods=["GET"])
+def home():
+    return 'Hello'
+
+
 api.add_resource(TableNames, '/table_names')
 api.add_resource(Tables, '/tables')
-api.add_resource(LocationsView, '/locations/')
-api.add_resource(Location, '/location/')
+api.add_resource(RequiredFields, '/requiredFields')
 api.add_resource(UserLogin, '/login/')
-api.add_resource(WorkerHistory, '/history/')
-api.add_resource(Update, '/update/')
-api.add_resource(CreateCustomTable, '/createCustomTable/')
-api.add_resource(ReturnCustomTable, '/customTable/')
 
 
 @app.route('/<path:page>')

@@ -1,11 +1,11 @@
 from telebot import types, apihelper
 import time
 import telebot
-from database import Locations, Global, History
+from database import Locations, Workers, History, db
 
 bot = telebot.TeleBot('973520242:AAH8WeGRmUNqKzYDdM1PCURHoojkNYWATwU')
 
-apihelper.proxy = {'https': 'socks5://403316002:uRRAwCvc@grsst.s5.opennetwork.cc:999'}
+# apihelper.proxy = {'https': 'socks5://403316002:uRRAwCvc@grsst.s5.opennetwork.cc:999'}
 globaltime = {}
 
 
@@ -23,7 +23,7 @@ def start(message):
 @bot.message_handler(commands=['go'])
 def name_listener(message):
     try:
-        outname = Global.find_one({"tg_id": message.chat.id})
+        outname = Workers.find_one({"Telegram": message.chat.id})
     except:
         outname = None
     if outname:
@@ -38,22 +38,21 @@ def name_listener(message):
 
 
 def surname_listener(message):
-    Global.insert_one({"tg_id": message.chat.id,
-                       "name": message.text,
-                       "surname": "",
-                       "total_time": "0:0:0",
-                       "last_project": "",
-                       "last_job": "",
-                       "last_lat": 0,
-                       "last_lng": 0,
-                       "project_chosen": ""
-                       })
+    Workers.insert_one({"Telegram": message.chat.id,
+                        "Name": message.text,
+                        "Surname": "",
+                        "Total time": "0:0:0",
+                        "Last project": "",
+                        "Last job": "",
+                        "Last lat": 0,
+                        "Last lng": 0
+                        })
     bot.send_message(message.chat.id, 'Введите свою фамилию')
     bot.register_next_step_handler(message, surname_handler)
 
 
 def surname_handler(message):
-    Global.update_one({"tg_id": message.chat.id}, {"$set": {"surname": message.text}})
+    Workers.update_one({"Telegram": message.chat.id}, {"$set": {"Surname": message.text}})
     bot.send_message(message.chat.id, '''Регистрация прошла успешно, тепер вы можете использовать бота. Его команды:
         /begin для начала отсчета
         /stop для окончания отсчета
@@ -62,7 +61,7 @@ def surname_handler(message):
 
 def project_choice(message):
     markup = types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True, resize_keyboard=True)
-    locations = [c['name'] for c in Locations.find()]
+    locations = [c['Name'] for c in db['Locations'].find()]
     for i in range(0, count_locations()):
         markup.add(types.KeyboardButton(text=locations[i]))
     bot.send_message(message.chat.id, text='Выберите обьект на котором вы работаете:', reply_markup=markup)
@@ -71,11 +70,11 @@ def project_choice(message):
 
 def geo(message):
     try:
-        proj_ident = Locations.find_one({"name": message.text})['_id']
+        proj_ident = Locations.find_one({"Name": message.text})['_id']
     except Exception as e:
         proj_ident = None
     if proj_ident:
-        Global.update_one({"tg_id": message.chat.id}, {"$set": {"project_chosen": proj_ident}})
+        Workers.update_one({"Telegram": message.chat.id}, {"$set": {"Last project": proj_ident}})
         keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
         button_geo = types.KeyboardButton(text="Отправить местоположение", request_location=True)
         keyboard.add(button_geo)
@@ -90,18 +89,18 @@ def geo(message):
 
 
 def location_new(message):
-    proj_ident = Global.find_one({"tg_id": message.chat.id})["project_chosen"]
+    proj_ident = Workers.find_one({"Telegram": message.chat.id})["Last project"]
     if message.location:
-        latitude_from_base = Locations.find_one({"_id": proj_ident})['lat']
-        longitude_from_base = Locations.find_one({"_id": proj_ident})['lng']
+        latitude_from_base = Locations.find_one({"_id": proj_ident})['Latitude']
+        longitude_from_base = Locations.find_one({"_id": proj_ident})['Longitude']
 
-        if latitude_from_base - 0.004 < message.location.latitude < latitude_from_base + 0.004 and \
-                longitude_from_base - 0.004 < message.location.longitude < longitude_from_base + 0.04:
+        if latitude_from_base - 0.0035 < message.location.latitude < latitude_from_base + 0.0035 and \
+                longitude_from_base - 0.0035 < message.location.longitude < longitude_from_base + 0.0035:
             now = time.time()
             globaltime[message.chat.id] = now
             bot.send_message(message.chat.id,
                              "Ваша локация соответствует необходимой, счетчик запущен. Для его остановки нажмите /stop  ")
-            Global.update_one({"tg_id": message.chat.id}, {"$set": {"last_project": proj_ident}})
+            Workers.update_one({"Telegram": message.chat.id}, {"$set": {"Last project": proj_ident}})
             bot.register_next_step_handler(message, stop_function)
         else:
             bot.send_message(message.chat.id,
@@ -132,27 +131,27 @@ def location_caller(message):
         bot.send_message(message.chat.id, "Некорректный ввод")
         bot.register_next_step_handler(message, location_caller)
     else:
-        Global.update_one({"tg_id": message.chat.id}, {"$set": {"last_job": message.text}})
+        Workers.update_one({"Telegram": message.chat.id}, {"$set": {"Last job": message.text}})
         bot.send_message(message.chat.id, "Теперь повторно отправьте свою геолокацию чтобы остановить таймер")
         bot.register_next_step_handler(message, location_stopper)
 
 
 def location_stopper(message):
     if message.location:
-        user_dict = Global.find_one({"tg_id": message.chat.id})
-        lastproject_from_base = user_dict['last_project']
+        user_dict = Workers.find_one({"Telegram": message.chat.id})
+        lastproject_from_base = user_dict['Last project']
 
-        latitude_from_base = Locations.find_one({"_id": lastproject_from_base})['lat']
+        latitude_from_base = Locations.find_one({"_id": lastproject_from_base})['Latitude']
 
-        longitude_from_base = Locations.find_one({"_id": lastproject_from_base})['lng']
+        longitude_from_base = Locations.find_one({"_id": lastproject_from_base})['Longitude']
 
-        name_from_base = user_dict['name']
+        name_from_base = user_dict['Name']
 
-        surname_from_base = user_dict['surname']
+        surname_from_base = user_dict['Surname']
 
-        last_job_from_base = user_dict['last_job']
+        last_job_from_base = user_dict['Last job']
 
-        last_project_name_from_base = Locations.find_one({"_id": lastproject_from_base})['name']
+        last_project_name_from_base = Locations.find_one({"_id": lastproject_from_base})['Name']
 
         if latitude_from_base - 0.0035 < message.location.latitude < latitude_from_base + 0.0035 and \
                 longitude_from_base - 0.0035 < message.location.longitude < longitude_from_base + 0.0035:
@@ -169,9 +168,10 @@ def location_stopper(message):
                 hours = minutes // 60
                 minutes = minutes % 60
 
-            Global.update_one({"tg_id": message.chat.id},
-                              {"$set": {"last_lat": message.location.latitude, "last_lng": message.location.longitude}})
-            time_list = user_dict['total_time'].split(":")
+            Workers.update_one({"Telegram": message.chat.id},
+                               {"$set": {"Last lat": message.location.latitude,
+                                         "Last lng": message.location.longitude}})
+            time_list = user_dict['Total time'].split(":")
             hours_from_base = int(time_list[0])
 
             minutes_from_base = int(time_list[1])
@@ -188,13 +188,13 @@ def location_stopper(message):
                 full_hours = full_hours + (full_minutes // 60)
                 full_minutes = full_minutes % 60
             time_totally = str(full_hours) + ":" + str(full_minutes) + ":" + str(full_secounds)
-            Global.update_one({"tg_id": message.chat.id},
-                              {"$set": {"total_time": time_totally}})
+            Workers.update_one({"Telegram": message.chat.id},
+                               {"$set": {"Total time": time_totally}})
             fresh_time = str(hours) + ":" + str(minutes) + ":" + str(seconds)
             History.insert_one(
-                {"user_id": message.chat.id, "name": name_from_base, "surname": surname_from_base,
-                 "time_written": fresh_time, "time": time.time(),
-                 "project": last_project_name_from_base, "work": last_job_from_base, "correct": True})
+                {"Telegram": message.chat.id, "Name": name_from_base, "Surname": surname_from_base,
+                 "Time written": fresh_time, "Time": time.time(),
+                 "Project": last_project_name_from_base, "Work": last_job_from_base, "Correct": True})
             bot.send_message(message.chat.id,
                              "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте  {4}".format(
                                  hours, minutes, seconds, last_job_from_base, last_project_name_from_base))
@@ -219,10 +219,11 @@ def location_stopper(message):
                 hours = minutes // 60
                 minutes = minutes % 60
 
-            Global.update_one({"tg_id": message.chat.id},
-                              {"$set": {"last_lat": message.location.latitude, "last_lng": message.location.longitude}})
+            Workers.update_one({"Telegram": message.chat.id},
+                               {"$set": {"Last lat": message.location.latitude,
+                                         "Last lng": message.location.longitude}})
 
-            time_list = user_dict['total_time'].split(":")
+            time_list = user_dict['Total time'].split(":")
             hours_from_base = int(time_list[0])
 
             minutes_from_base = int(time_list[1])
@@ -239,13 +240,13 @@ def location_stopper(message):
                 full_hours = full_hours + (full_minutes // 60)
                 full_minutes = full_minutes % 60
             time_totally = str(full_hours) + ":" + str(full_minutes) + ":" + str(full_secounds)
-            Global.update_one({"tg_id": message.chat.id},
-                              {"$set": {"total_time": time_totally}})
+            Workers.update_one({"Telegram": message.chat.id},
+                               {"$set": {"Total time": time_totally}})
             fresh_time = str(hours) + ":" + str(minutes) + ":" + str(seconds)
             History.insert_one(
-                {"user_id": message.chat.id, "name": name_from_base, "surname": surname_from_base,
-                 "time_written": fresh_time, "time": time.time(),
-                 "project": last_project_name_from_base, "work": last_job_from_base, "correct": False})
+                {"Telegram": message.chat.id, "Name": name_from_base, "Surname": surname_from_base,
+                 "Time written": fresh_time, "Time": time.time(),
+                 "Project": last_project_name_from_base, "Work": last_job_from_base, "Correct": False})
             bot.send_message(message.chat.id,
                              "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте {4}, но таймер был остановлен НЕКОРРЕКТНО".format(
                                  hours, minutes, seconds, message.text, last_project_name_from_base))
@@ -266,7 +267,7 @@ def location_stopper(message):
 @bot.message_handler(commands=['time', 'stop', 'begin'])
 def free_time_function(message):
     if message.text == "/time":
-        time_value = Global.find_one({"tg_id": message.chat.id})["total_time"]
+        time_value = Workers.find_one({"Telegram": message.chat.id})["Total time"]
         bot.send_message(message.chat.id,
                          f"Ваше время: {time_value}")
 

@@ -1,44 +1,133 @@
-from flask import request
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource, reqparse
-from database import db
+from database import db, Locations
 
 
 class Tables(Resource):
+    # to find table by name
     @jwt_required
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=str, required=True, help='Name cannot be left blank')
+        parser.add_argument('Name', type=str, required=True, help='Name cannot be left blank')
         data = parser.parse_args()
-        array = list(db[data['name']].find())
-        for el in array:
-            del el['_id']
-        return array
+        if db[data['Name']]:  # if table exists
+            table = db[data['Name']].find()  # taking the table
+            allowed_keys = db['Metadata'].find_one({"Name": data['Name']})[
+                "keys"]  # taking the keys to return from table
+            to_return = []
+            for el in table:  # checking each table line and taking the needed elements
+                res = {}
+                for el_key in el.keys():
+                    if el_key in allowed_keys:
+                        res[el_key] = el[el_key]
+                try:
+                    if res['Last project']:
+                        res['Last project'] = Locations.find_one({"_id": el["Last project"]})['Name']
+                except:
+                    pass
+                to_return.append(res)
+            return {"message": to_return}
+        return {"message": "Table not found"}
 
+    # to edit an existing table
     @jwt_required
     def patch(self):
-        data = request.get_json(force=True)
-        print(data)
+        parser = reqparse.RequestParser()
+        parser.add_argument('tableName', type=str)
+        parser.add_argument('rowsToEdit', type=str)
+        parser.add_argument('rowsToDelete', type=str)
+        parser.add_argument('rowsToAdd', type=str)
+        data = parser.parse_args()
         table_name = data['tableName']
-
-        if 'rowsToEdit' in data:
-            rowsToEdit = data['rowsToEdit']
-            for el in rowsToEdit:
-                query = {'ID': el['ID']}
-                new_values = {'$set': el}
-                db[table_name].update_one(query, new_values)
-
-        if 'rowsToDelete' in data:
-            rowsToDelete = eval(data['rowsToDelete'])
-            for index in rowsToDelete:
-                query = {'ID', index}
+        rows_to_edit = data['rowsToEdit']
+        rows_to_delete = data['rowsToDelete']
+        rows_to_add = data['rowsToAdd']
+        try:
+            allowed_keys = db['Metadata'].find_one({"Name": data['tableName']})["keys"]
+        except:
+            return {"message": "An error occurred"}
+        if rows_to_edit:
+            rows_to_edit = eval(rows_to_edit)
+            for row in rows_to_edit:
+                new_values = {}
+                for key in row.keys():
+                    if key in allowed_keys:
+                        new_values[key] = row[key]
+                if db['Metadata'].find_one({"Name": data['tableName']})["containsWorkers"]:
+                    query = {'Telegram': row['Telegram']}
+                elif db['Metadata'].find_one({"Name": data['tableName']})["containsGeo"]:
+                    query = {'ID': row['ID']}
+                else:
+                    query = {'Time': row['Time']}
+                db[table_name].update_one(query, {'$set': new_values})
+        # if we are deleting people, telegrams have to be in data, if locations - IDs
+        if rows_to_delete:
+            for index in rows_to_delete:
+                if db['Metadata'].find_one({"Name": table_name})["containsWorkers"]:
+                    query = {'Telegram': index}
+                elif db['Metadata'].find_one({"Name": table_name})["containsGeo"]:
+                    query = {'ID': int(index)}
+                else:
+                    return {"message": "Error occurred while deleting"}
                 db[table_name].delete_one(query)
 
-        if 'rowsToAdd' in data:
-            rowsToAdd = data['rowsToAdd']
-            print(type(rowsToAdd))
-            db[table_name].insert_many(rowsToAdd)
+        if rows_to_add:
+            rows_to_add = eval(rows_to_add)
+            if db['Metadata'].find_one({"Name": table_name})["containsWorkers"]:
+                workers = True
+            elif db['Metadata'].find_one({"Name": table_name})["containsGeo"]:
+                workers = False
+            else:
+                return {"message": "Error occurred while adding"}
+            for row in rows_to_add:
+                new_value = {}
+                if not workers:
+                    new_value['ID'] = get_sequence('loc')
+                for key in row.keys():
+                    if key in allowed_keys:
+                        new_value[key] = row[key]
+                if workers is False and db[table_name].find_one({"Name": row["Name"]}) is None:
+                    db[table_name].insert_one(new_value)
+                elif workers and db[table_name].find_one({"Telegram": row["Telegram"]}) is None:
+                    db[table_name].insert_one(new_value)
+        return {"message": "Successfully done"}
+
+    # to create a new table
+    @jwt_required
+    def put(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("Name", type=str, required=True, help='Name cannot be left blank')
+        parser.add_argument("keys", type=str, required=True, help='Params cannot be left blank')
+        data = parser.parse_args()
+        keys = eval(data["keys"])
+        for key in db["Metadata"].find_one({"Name": "Required fields"})["keys"]:
+            if key not in keys:
+                return {"message": "Not all required keys specified"}
+        if data["Name"] in db.list_collection_names():
+            return {"message": "Table with this name already exists"}
+        collection = db[data["Name"]]
+        collection.insert_one({"Initial": "Initial"})
+        db["Metadata"].insert_one({data['Name']: {
+            "keys": keys,
+            "containsWorkers": True,
+            "containsGeo": False
+        }})
+        return {"message": "Collection successfully created"}
+
+    @jwt_required
+    def delete(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("Name", type=str, required=True, help='Name cannot be left blank')
+        data = parser.parse_args()
+        table_name = data['Name']
+        try:
+            db[table_name].drop()
+            return {"message": "Successfully deleted"}
+        except:
+            return {"message": "An error occurred during deletion"}
 
 
-
-
+def get_sequence(name):
+    collection = db.sequences
+    document = collection.find_one_and_update({"_id": name}, {"$inc": {"value": 1}}, return_document=True)
+    return document["value"]
