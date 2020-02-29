@@ -1,5 +1,5 @@
 from flask_jwt_extended import jwt_required
-from flask_restful import Resource, reqparse
+from flask_restful import Resource, reqparse, request
 from database import db, Locations
 
 
@@ -26,72 +26,64 @@ class Tables(Resource):
                 except:
                     pass
                 to_return.append(res)
-                metadata.pop('_id',None)
-                print(metadata)
+                metadata.pop('_id', None)
             return {"table": to_return, "metadata": metadata}
         return {"message": "Table not found"}
 
     # to edit an existing table
     @jwt_required
     def patch(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument('tableName', type=str)
-        parser.add_argument('rowsToEdit', type=str)
-        parser.add_argument('rowsToDelete', type=str)
-        parser.add_argument('rowsToAdd', type=str)
-        data = parser.parse_args()
-        table_name = data['tableName']
-        rows_to_edit = data['rowsToEdit']
-        rows_to_delete = data['rowsToDelete']
-        rows_to_add = data['rowsToAdd']
+        data = request.get_json(force=True)
         try:
             allowed_keys = db['Metadata'].find_one({"Name": data['tableName']})["keys"]
         except:
             return {"message": "An error occurred"}
-        if rows_to_edit:
-            rows_to_edit = eval(rows_to_edit)
-            for row in rows_to_edit:
-                new_values = {}
-                for key in row.keys():
-                    if key in allowed_keys:
-                        new_values[key] = row[key]
-                if db['Metadata'].find_one({"Name": data['tableName']})["containsWorkers"]:
-                    query = {'Telegram': row['Telegram']}
-                elif db['Metadata'].find_one({"Name": data['tableName']})["containsGeo"]:
-                    query = {'ID': row['ID']}
-                else:
-                    query = {'Time': row['Time']}
-                db[table_name].update_one(query, {'$set': new_values})
-        # if we are deleting people, telegrams have to be in data, if locations - IDs
-        if rows_to_delete:
-            for index in rows_to_delete:
-                if db['Metadata'].find_one({"Name": table_name})["containsWorkers"]:
-                    query = {'Telegram': index}
-                elif db['Metadata'].find_one({"Name": table_name})["containsGeo"]:
-                    query = {'ID': int(index)}
-                else:
-                    return {"message": "Error occurred while deleting"}
-                db[table_name].delete_one(query)
-
-        if rows_to_add:
-            rows_to_add = eval(rows_to_add)
-            if db['Metadata'].find_one({"Name": table_name})["containsWorkers"]:
-                workers = True
-            elif db['Metadata'].find_one({"Name": table_name})["containsGeo"]:
-                workers = False
+        table_name = data['tableName']
+        rows_to_edit = data['rowsToEdit']
+        rows_to_add = data['rowsToAdd']
+        rows_to_delete = data['rowsToDelete']
+        for row in rows_to_edit:
+            new_values = {}
+            print(row);
+            for key in row.keys():
+                if key in allowed_keys:
+                    new_values[key] = row[key]
+            if db['Metadata'].find_one({"Name": data['tableName']})["containsWorkers"]:
+                query = {'Telegram': row['Telegram']}
+            elif db['Metadata'].find_one({"Name": data['tableName']})["containsGeo"]:
+                query = {'ID': row['ID']}
             else:
-                return {"message": "Error occurred while adding"}
-            for row in rows_to_add:
-                new_value = {}
-                if not workers:
-                    new_value['ID'] = get_sequence('loc')
-                for key in row.keys():
-                    if key in allowed_keys:
-                        new_value[key] = row[key]
-                if workers is False and db[table_name].find_one({"Name": row["Name"]}) is None:
-                    db[table_name].insert_one(new_value)
-                elif workers and db[table_name].find_one({"Telegram": row["Telegram"]}) is None:
-                    db[table_name].insert_one(new_value)
+                query = {'Time': row['Time']}
+            db[table_name].update_one(query, {'$set': new_values})
+        # if we are deleting people, telegrams have to be in data, if locations - IDs
+
+        for index in rows_to_delete:
+            if db['Metadata'].find_one({"Name": table_name})["containsWorkers"]:
+                query = {'Telegram': index}
+            elif db['Metadata'].find_one({"Name": table_name})["containsGeo"]:
+                query = {'ID': int(index)}
+            else:
+                return {"message": "Error occurred while deleting"}
+            print(query);
+            db[table_name].delete_one(query)
+
+        if db['Metadata'].find_one({"Name": table_name})["containsWorkers"]:
+            workers = True
+        elif db['Metadata'].find_one({"Name": table_name})["containsGeo"]:
+            workers = False
+        else:
+            return {"message": "Error occurred while adding"}
+        for row in rows_to_add:
+            new_value = {}
+            if not workers:
+                new_value['ID'] = get_sequence('loc')
+            for key in row.keys():
+                if key in allowed_keys:
+                    new_value[key] = row[key]
+            if workers is False and db[table_name].find_one({"Name": row["Name"]}) is None:
+                db[table_name].insert_one(new_value)
+            elif workers and db[table_name].find_one({"Telegram": row["Telegram"]}) is None:
+                db[table_name].insert_one(new_value)
         return {"message": "Successfully done"}
 
     # to create a new table
