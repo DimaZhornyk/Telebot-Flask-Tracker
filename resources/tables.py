@@ -1,3 +1,4 @@
+from bson import ObjectId
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource, reqparse, request
 from database import db, Locations
@@ -22,11 +23,15 @@ class Tables(Resource):
                         res[el_key] = el[el_key]
                 try:
                     if res['Last project']:
-                        res['Last project'] = Locations.find_one({"_id": el["Last project"]})['Name']
+                        res['Last project'] = Locations.find_one({"_id": res["Last project"]})['Name']
                 except:
-                    pass
+                    if 'Last project' in res:
+                        if isinstance(res['Last project'],ObjectId):
+                            res['Last project'] = 'unknown'
                 to_return.append(res)
+            print(to_return)
             metadata.pop('_id', None)
+            print(metadata)
             return {"table": to_return, "metadata": metadata}
         return {"message": "Table not found"}
 
