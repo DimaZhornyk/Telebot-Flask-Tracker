@@ -13,11 +13,24 @@ def count_locations():
     return Locations.count_documents({})
 
 
+def send_msg(*args):
+    try:
+        if len(args) == 3:
+            bot.send_message(args[0], args[1], reply_markup=args[2])
+        else:
+            bot.send_message(args[0], args[1])
+    except:
+        if args[2]:
+            bot.send_message(args[0], args[1], reply_markup=args[2])
+        else:
+            bot.send_message(args[0], args[1])
+
+
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.send_message(message.chat.id,
-                     "Привет, я ваш бот. Я умею считать ваше рабочее время и показывать накопленные часы. "
-                     "Делаю я это только если вы находтесь на рабочем месте. Для начала работы, нажмите /go")
+    send_msg(message.chat.id,
+             "Привет, я ваш бот. Я умею считать ваше рабочее время и показывать накопленные часы. "
+             "Делаю я это только если вы находтесь на рабочем месте. Для начала работы, нажмите /go")
 
 
 @bot.message_handler(commands=['go'])
@@ -27,13 +40,13 @@ def name_listener(message):
     except:
         outname = None
     if outname:
-        bot.send_message(message.chat.id, '''Вы находитесь в главном меню. Доступные вам команды:
+        send_msg(message.chat.id, '''Вы находитесь в главном меню. Доступные вам команды:
         		/begin для начала отсчета
         		/stop для окончания отсчета
         		/time для отображения накопленного времени''')
         bot.register_next_step_handler(message, free_time_function)
     else:
-        bot.send_message(message.chat.id, 'Введите свое имя')
+        send_msg(message.chat.id, 'Введите свое имя')
         bot.register_next_step_handler(message, surname_listener)
 
 
@@ -47,13 +60,13 @@ def surname_listener(message):
                         "Last lat": 0,
                         "Last lng": 0
                         })
-    bot.send_message(message.chat.id, 'Введите свою фамилию')
+    send_msg(message.chat.id, 'Введите свою фамилию')
     bot.register_next_step_handler(message, surname_handler)
 
 
 def surname_handler(message):
     Workers.update_one({"Telegram": message.chat.id}, {"$set": {"Surname": message.text}})
-    bot.send_message(message.chat.id, '''Регистрация прошла успешно, тепер вы можете использовать бота. Его команды:
+    send_msg(message.chat.id, '''Регистрация прошла успешно, тепер вы можете использовать бота. Его команды:
         /begin для начала отсчета
         /stop для окончания отсчета
         /time для отображения накопленного времени''')
@@ -64,7 +77,7 @@ def project_choice(message):
     locations = [c['Name'] for c in db['Locations'].find()]
     for i in range(0, count_locations()):
         markup.add(types.KeyboardButton(text=locations[i]))
-    bot.send_message(message.chat.id, text='Выберите обьект на котором вы работаете:', reply_markup=markup)
+    send_msg(message.chat.id, 'Выберите обьект на котором вы работаете:', markup)
     bot.register_next_step_handler(message, geo)
 
 
@@ -78,13 +91,13 @@ def geo(message):
         keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
         button_geo = types.KeyboardButton(text="Отправить местоположение", request_location=True)
         keyboard.add(button_geo)
-        bot.send_message(message.chat.id,
-                         "Нажмите на кнопку и передайте мне свое местоположение или нажмите /back для возврата в главное меню",
-                         reply_markup=keyboard)
+        send_msg(message.chat.id,
+                 "Нажмите на кнопку и передайте мне свое местоположение или нажмите /back для возврата в главное меню",
+                 keyboard)
         bot.register_next_step_handler(message, location_new)
 
     else:
-        bot.send_message(message.chat.id, "Некорректный ввод")
+        send_msg(message.chat.id, "Некорректный ввод")
         bot.register_next_step_handler(message, geo)
 
 
@@ -98,41 +111,41 @@ def location_new(message):
                 longitude_from_base - 0.0035 < message.location.longitude < longitude_from_base + 0.0035:
             now = time.time()
             globaltime[message.chat.id] = now
-            bot.send_message(message.chat.id,
-                             "Ваша локация соответствует необходимой, счетчик запущен. Для его остановки нажмите /stop  ")
+            send_msg(message.chat.id,
+                     "Ваша локация соответствует необходимой, счетчик запущен. Для его остановки нажмите /stop  ")
             Workers.update_one({"Telegram": message.chat.id}, {"$set": {"Last project": proj_ident}})
             bot.register_next_step_handler(message, stop_function)
         else:
-            bot.send_message(message.chat.id,
-                             "Ваша геолокация не соответствует необходимой, вернитесь и отправьте геолокацию заново или нажмите /back для возврата в главное меню ")
+            send_msg(message.chat.id,
+                     "Ваша геолокация не соответствует необходимой, вернитесь и отправьте геолокацию заново или нажмите /back для возврата в главное меню ")
             bot.register_next_step_handler(message, location_new)
     elif message.text == "/back":
-        bot.send_message(message.chat.id, '''Вы находитесь в главном меню. Доступные вам команды:
+        send_msg(message.chat.id, '''Вы находитесь в главном меню. Доступные вам команды:
         		/begin для начала отсчета
         		/stop для окончания отсчета
         		/time для отображения накопленного времени''')
     else:
-        bot.send_message(message.chat.id, 'Я ожидаю вашу геолокацию')
+        send_msg(message.chat.id, 'Я ожидаю вашу геолокацию')
         bot.register_next_step_handler(message, location_new)
 
 
 def stop_function(message):
     if message.text == '/stop':
-        bot.send_message(message.chat.id, "Что вы делали сегодня? ")
+        send_msg(message.chat.id, "Что вы делали сегодня? ")
         bot.register_next_step_handler(message, location_caller)
     else:
-        bot.send_message(message.chat.id,
-                         "Сейчас вам доступна только команда /stop ")
+        send_msg(message.chat.id,
+                 "Сейчас вам доступна только команда /stop ")
         bot.register_next_step_handler(message, stop_function)
 
 
 def location_caller(message):
     if message.text is None:
-        bot.send_message(message.chat.id, "Некорректный ввод")
+        send_msg(message.chat.id, "Некорректный ввод")
         bot.register_next_step_handler(message, location_caller)
     else:
         Workers.update_one({"Telegram": message.chat.id}, {"$set": {"Last job": message.text}})
-        bot.send_message(message.chat.id, "Теперь повторно отправьте свою геолокацию чтобы остановить таймер")
+        send_msg(message.chat.id, "Теперь повторно отправьте свою геолокацию чтобы остановить таймер")
         bot.register_next_step_handler(message, location_stopper)
 
 
@@ -155,7 +168,7 @@ def location_stopper(message):
 
         if latitude_from_base - 0.0035 < message.location.latitude < latitude_from_base + 0.0035 and \
                 longitude_from_base - 0.0035 < message.location.longitude < longitude_from_base + 0.0035:
-            bot.send_message(message.chat.id, "Ваша локация соответствует необходимой, таймер остановлен корректно")
+            send_msg(message.chat.id, "Ваша локация соответствует необходимой, таймер остановлен корректно")
             minutes = 0
             hours = 0
             prev_time = globaltime[message.chat.id]
@@ -195,16 +208,16 @@ def location_stopper(message):
                 {"Telegram": message.chat.id, "Name": name_from_base, "Surname": surname_from_base,
                  "Time written": fresh_time, "Time": time.time(),
                  "Project": last_project_name_from_base, "Work": last_job_from_base, "Correct": True})
-            bot.send_message(message.chat.id,
-                             "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте  {4}".format(
-                                 hours, minutes, seconds, last_job_from_base, last_project_name_from_base))
-            bot.send_message(message.chat.id,
-                             "Ваше общее время: {0} часов , {1} минут , {2} секунд".format(full_hours, full_minutes,
-                                                                                           full_secounds))
-            bot.send_message(403316002,
-                             "Пользователь {0} {1} остановил таймер корректно, начав работу на обьекте {2}, делая {3}, записал себе {4} часов {5} минут {6} секунд".format(
-                                 name_from_base, surname_from_base, last_project_name_from_base,
-                                 last_job_from_base, hours, minutes, seconds))
+            send_msg(message.chat.id,
+                     "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте  {4}".format(
+                         hours, minutes, seconds, last_job_from_base, last_project_name_from_base))
+            send_msg(message.chat.id,
+                     "Ваше общее время: {0} часов , {1} минут , {2} секунд".format(full_hours, full_minutes,
+                                                                                   full_secounds))
+            send_msg(403316002,
+                     "Пользователь {0} {1} остановил таймер корректно, начав работу на обьекте {2}, делая {3}, записал себе {4} часов {5} минут {6} секунд".format(
+                         name_from_base, surname_from_base, last_project_name_from_base,
+                         last_job_from_base, hours, minutes, seconds))
 
         else:
             minutes = 0
@@ -247,20 +260,20 @@ def location_stopper(message):
                 {"Telegram": message.chat.id, "Name": name_from_base, "Surname": surname_from_base,
                  "Time written": fresh_time, "Time": time.time(),
                  "Project": last_project_name_from_base, "Work": last_job_from_base, "Correct": False})
-            bot.send_message(message.chat.id,
-                             "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте {4}, но таймер был остановлен НЕКОРРЕКТНО".format(
-                                 hours, minutes, seconds, message.text, last_project_name_from_base))
-            bot.send_message(403316002,
-                             "Пользователь {0} {1} остановил таймер НЕКОРРЕКТНО, начав работу на обьекте {2}, делая {3}. Записанное время:{4} часов {5} минут {6} секунд. Последние координаты: Lat: {7} Lng: {8} ".format(
-                                 name_from_base, surname_from_base, last_project_name_from_base,
-                                 last_job_from_base, hours, minutes, seconds, message.location.latitude,
-                                 message.location.longitude))
-            bot.send_message(message.chat.id,
-                             "Ваше общее время: {0} часов , {1} минут , {2} секунд".format(full_hours, full_minutes,
-                                                                                           full_secounds))
+            send_msg(message.chat.id,
+                     "За сегодня вы получили {0} часов {1} минут {2} секунд, делая {3} на обьекте {4}, но таймер был остановлен НЕКОРРЕКТНО".format(
+                         hours, minutes, seconds, message.text, last_project_name_from_base))
+            send_msg(403316002,
+                     "Пользователь {0} {1} остановил таймер НЕКОРРЕКТНО, начав работу на обьекте {2}, делая {3}. Записанное время:{4} часов {5} минут {6} секунд. Последние координаты: Lat: {7} Lng: {8} ".format(
+                         name_from_base, surname_from_base, last_project_name_from_base,
+                         last_job_from_base, hours, minutes, seconds, message.location.latitude,
+                         message.location.longitude))
+            send_msg(message.chat.id,
+                     "Ваше общее время: {0} часов , {1} минут , {2} секунд".format(full_hours, full_minutes,
+                                                                                   full_secounds))
 
     else:
-        bot.send_message(message.chat.id, "Я ожидаю вашу геолокацию")
+        send_msg(message.chat.id, "Я ожидаю вашу геолокацию")
         bot.register_next_step_handler(message, location_stopper)
 
 
@@ -268,16 +281,16 @@ def location_stopper(message):
 def free_time_function(message):
     if message.text == "/time":
         time_value = Workers.find_one({"Telegram": message.chat.id})["Total time"]
-        bot.send_message(message.chat.id,
-                         f"Ваше время: {time_value}")
+        send_msg(message.chat.id,
+                 f"Ваше время: {time_value}")
 
     elif message.text == "/begin":
         project_choice(message)
     elif message.text == "/stop":
-        bot.send_message(message.chat.id, "Нечего останавливать, таймер не был запущен")
+        send_msg(message.chat.id, "Нечего останавливать, таймер не был запущен")
 
     else:
-        bot.send_message(message.chat.id, "Ваше сообщение не корректно")
+        send_msg(message.chat.id, "Ваше сообщение не корректно")
 
 
 bot.polling(none_stop=True, timeout=123)
