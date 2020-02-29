@@ -12,8 +12,8 @@ class Tables(Resource):
         data = parser.parse_args()
         if db[data['Name']]:  # if table exists
             table = db[data['Name']].find()  # taking the table
-            allowed_keys = db['Metadata'].find_one({"Name": data['Name']})[
-                "keys"]  # taking the keys to return from table
+            metadata = db['Metadata'].find_one({"Name": data['Name']});
+            allowed_keys = metadata["keys"]  # taking the keys to return from table
             to_return = []
             for el in table:  # checking each table line and taking the needed elements
                 res = {}
@@ -26,7 +26,9 @@ class Tables(Resource):
                 except:
                     pass
                 to_return.append(res)
-            return {"message": to_return}
+                metadata.pop('_id',None)
+                print(metadata)
+            return {"table": to_return, "metadata": metadata}
         return {"message": "Table not found"}
 
     # to edit an existing table
