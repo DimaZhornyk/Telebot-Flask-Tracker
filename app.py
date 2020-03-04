@@ -4,7 +4,7 @@ from flask_restful import Api
 from flask import Flask, redirect
 from resources.user import UserLogin
 from resources.table_names import TableNames, RequiredFields
-from resources.tables import Tables
+from resources.tables import Tables, Worker
 from flask_cors import CORS
 
 app = Flask(__name__,
@@ -27,6 +27,7 @@ api.add_resource(TableNames, '/table_names')
 api.add_resource(Tables, '/tables')
 api.add_resource(RequiredFields, '/requiredFields')
 api.add_resource(UserLogin, '/login/')
+api.add_resource(Worker, '/getWorkerById')
 
 
 @app.route('/<path:page>')
