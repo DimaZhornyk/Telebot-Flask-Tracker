@@ -26,7 +26,7 @@ class Tables(Resource):
                         res['Last project'] = Locations.find_one({"_id": res["Last project"]})['Name']
                 except:
                     if 'Last project' in res:
-                        if isinstance(res['Last project'],ObjectId):
+                        if isinstance(res['Last project'], ObjectId):
                             res['Last project'] = 'unknown'
                 to_return.append(res)
             print(to_return)
@@ -73,12 +73,14 @@ class Tables(Resource):
                 return {}, 400
             db[table_name].delete_one(query)
 
-        if db['Metadata'].find_one({"Name": table_name})["containsWorkers"]:
-            workers = True
-        elif db['Metadata'].find_one({"Name": table_name})["containsGeo"]:
-            workers = False
-        else:
-            return {}, 400
+        if len(rows_to_add) > 0:
+            if db['Metadata'].find_one({"Name": table_name})["containsWorkers"]:
+                workers = True
+            elif db['Metadata'].find_one({"Name": table_name})["containsGeo"]:
+                workers = False
+            else:
+                return {}, 400
+
         for row in rows_to_add:
             new_value = {}
             for key in row.keys():
