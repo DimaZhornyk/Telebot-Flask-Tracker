@@ -29,9 +29,7 @@ class Tables(Resource):
                         if isinstance(res['Last project'], ObjectId):
                             res['Last project'] = 'unknown'
                 to_return.append(res)
-            print(to_return)
             metadata.pop('_id', None)
-            print(metadata)
             return {"table": to_return, "metadata": metadata}
         return {"message": "Table not found"}
 
@@ -107,11 +105,11 @@ class Tables(Resource):
         collection = db[data["Name"]]
         collection.insert_one({"Initial": "Initial"})
         collection.delete_one({"Initial": "Initial"})
-        db["Metadata"].insert_one({data['Name']: {
-            "keys": keys,
-            "containsWorkers": True,
-            "containsGeo": False
-        }})
+        db["Metadata"].insert_one(
+            {"Name": data["Name"],
+             "keys": keys,
+             "containsWorkers": True,
+             "containsGeo": False})
         return {"message": "Collection successfully created"}
 
     @jwt_required
@@ -128,12 +126,16 @@ class Tables(Resource):
 
 
 class Worker(Resource):
+    @jwt_required
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument("Telegram", type=str, required=True, help='Name cannot be left blank')
         data = parser.parse_args()
         try:
-            worker = db['History'].find_one({"Telegram": data['Telegram']}).pop("_id")
+            workers = list(db['History'].find({"Telegram": int(data['Telegram'])}))
+            for worker in workers:
+                worker = worker.pop('_id')
+            return workers
         except:
             return {}, 400
         return
