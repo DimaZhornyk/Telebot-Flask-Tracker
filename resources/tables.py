@@ -97,11 +97,8 @@ class Tables(Resource):
     # to create a new table
     @jwt_required
     def put(self):
-        parser = reqparse.RequestParser()
-        parser.add_argument("Name", type=str, required=True, help='Name cannot be left blank')
-        parser.add_argument("keys", type=str, required=True, help='Params cannot be left blank')
-        data = parser.parse_args()
-        keys = eval(data["keys"])
+        data = request.get_json(force=True)
+        keys = data["keys"];
         for key in db["Metadata"].find_one({"Name": "Required fields"})["keys"]:
             if key not in keys:
                 return {"message": "Not all required keys specified"}, 400
