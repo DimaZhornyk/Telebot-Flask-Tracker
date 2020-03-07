@@ -96,7 +96,7 @@ class Tables(Resource):
     @jwt_required
     def put(self):
         data = request.get_json(force=True)
-        keys = data["keys"];
+        keys = data["keys"]
         for key in db["Metadata"].find_one({"Name": "Required fields"})["keys"]:
             if key not in keys:
                 return {"message": "Not all required keys specified"}, 400
@@ -138,7 +138,6 @@ class Worker(Resource):
             return workers
         except:
             return {}, 400
-        return
 
 
 def get_sequence(name):
