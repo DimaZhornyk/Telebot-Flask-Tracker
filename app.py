@@ -9,7 +9,7 @@ from flask_cors import CORS
 
 app = Flask(__name__,
             static_url_path='',
-            static_folder="C:\js_project\my-first-svelte-project\public",
+            static_folder="\public",
             )
 api = Api(app)
 CORS(app)
@@ -18,9 +18,9 @@ app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=6000)
 jwt = JWTManager(app)
 
 
-@app.route('/', methods=["GET"])
-def home():
-    return 'Hello'
+@app.route('/')
+def root():
+    return app.send_static_file('index.html')
 
 
 api.add_resource(TableNames, '/table_names')
