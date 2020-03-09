@@ -1,7 +1,7 @@
 from datetime import timedelta
 from flask_jwt_extended import JWTManager
 from flask_restful import Api
-from flask import Flask, redirect
+from flask import Flask, redirect, send_from_directory
 from resources.user import UserLogin
 from resources.table_names import TableNames, RequiredFields
 from resources.tables import Tables, Worker
@@ -20,7 +20,8 @@ jwt = JWTManager(app)
 
 @app.route('/')
 def root():
-    return app.send_static_file('index.html')
+    return send_from_directory('static', 'index.html')
+    # return app.send_static_file('index.html')
 
 
 api.add_resource(TableNames, '/table_names')

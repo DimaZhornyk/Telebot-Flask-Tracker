@@ -28,7 +28,7 @@ class Tables(Resource):
                     if 'Last project' in res:
                         if isinstance(res['Last project'], ObjectId):
                             res['Last project'] = 'unknown'
-                to_return.append(res)
+                to_return.insert(0, res)
             metadata.pop('_id', None)
             return {"table": to_return, "metadata": metadata}
         return {"message": "Table not found"}
@@ -134,8 +134,8 @@ class Worker(Resource):
         try:
             workers = list(db['History'].find({"Telegram": int(data['Telegram'])}))
             for worker in workers:
-                worker = worker.pop('_id')
-            return workers
+                worker.pop('_id')
+            return list(reversed(workers))
         except:
             return {}, 400
 

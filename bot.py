@@ -5,7 +5,6 @@ from database import Locations, Workers, History, db
 
 bot = telebot.TeleBot('973520242:AAH8WeGRmUNqKzYDdM1PCURHoojkNYWATwU')
 
-# apihelper.proxy = {'https': 'socks5://403316002:uRRAwCvc@grsst.s5.opennetwork.cc:999'}
 globaltime = {}
 
 
