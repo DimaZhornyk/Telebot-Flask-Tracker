@@ -18,6 +18,6 @@ class UserLogin(Resource):
         user_password = Users.find_one({"username": data['username']})['password']
         if user_password and user_password == data['password']:
             access_token = create_access_token(identity=data['username'])
-            return {'access_token': access_token}, 200
+            return {'access_token': access_token, 'expiration_time': 7200}, 200
 
         return {'message': 'Password is incorrect'}, 401

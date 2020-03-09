@@ -14,9 +14,8 @@ app = Flask(__name__,
 api = Api(app)
 CORS(app)
 app.secret_key = 'sssss'
-app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=6000)
+app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=7200)
 jwt = JWTManager(app)
-
 
 @app.route('/')
 def root():
