@@ -120,6 +120,7 @@ class Tables(Resource):
         table_name = data['Name']
         try:
             db[table_name].drop()
+            db['Metadata'].delete_one({"Name": data["Name"]})
             return {"message": "Successfully deleted"}
         except:
             return {}, 400
