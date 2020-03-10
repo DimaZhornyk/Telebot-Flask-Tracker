@@ -8,7 +8,7 @@ from resources.tables import Tables, Worker
 from flask_cors import CORS
 
 app = Flask(__name__,
-            static_url_path='',
+            static_url_path='/',
             static_folder=".\\static",
             )
 api = Api(app)
@@ -19,8 +19,8 @@ jwt = JWTManager(app)
 
 @app.route('/')
 def root():
-    return send_from_directory('static', 'index.html')
-    # return app.send_static_file('index.html')
+    #return send_from_directory('static', 'index.html')
+    return app.send_static_file('index.html')
 
 
 api.add_resource(TableNames, '/table_names')
