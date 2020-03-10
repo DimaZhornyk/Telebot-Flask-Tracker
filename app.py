@@ -17,20 +17,6 @@ app.secret_key = 'sssss'
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=7200)
 jwt = JWTManager(app)
 
-
-
-# @app.route('/')
-# def root():
-#     return send_from_directory('static', 'index.html')
-#     # return app.send_static_file('index.html')
-
-
-# @app.route('/')
-# def root():
-#     return send_from_directory('static', 'index.html')
-#     # return app.send_static_file('index.html')
-
-
 api.add_resource(TableNames, '/table_names')
 api.add_resource(Tables, '/tables')
 api.add_resource(RequiredFields, '/requiredFields')
@@ -41,14 +27,14 @@ api.add_resource(Worker, '/getWorkerById')
 def root():
     print('lol')
     return send_from_directory('static', 'index.html')
-@app.route('/<path:page>')
-def allGets(page):
-    print(page)
-    url = page.rsplit('/',1)
-    if(len(url)>=2):
-        return send_from_directory('static\\'+url[0],url[1])
-    else:
-        return send_from_directory('static',url[0])
+# @app.route('/<path:page>')
+# def allGets(page):
+#     print(page)
+#     url = page.rsplit('/',1)
+#     if(len(url)>=2):
+#         return send_from_directory('static\\'+url[0],url[1])
+#     else:
+#         return send_from_directory('static',url[0])
 
 
 if __name__ == '__main__':
