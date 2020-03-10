@@ -23,10 +23,17 @@ api.add_resource(RequiredFields, '/requiredFields')
 api.add_resource(UserLogin, '/login/')
 api.add_resource(Worker, '/getWorkerById')
 
+
 @app.route('/')
 def root():
-    print('lol')
     return send_from_directory('static', 'index.html')
+
+
+@app.route('/<path:page>')
+def allGets(page):
+    return redirect('/')
+
+
 # @app.route('/<path:page>')
 # def allGets(page):
 #     print(page)
