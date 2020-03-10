@@ -9,13 +9,14 @@ from resources.table_names import TableNames, RequiredFields
 from resources.tables import Tables, Worker
 from flask_cors import CORS
 
-app = Flask(__name__, )
-# app.wsgi_app = WhiteNoise(app.wsgi_app, root='static/')
+app = Flask(__name__)
+app.wsgi_app = WhiteNoise(app.wsgi_app, root='static/')
 api = Api(app)
 CORS(app)
 app.secret_key = 'sssss'
 app.config['JWT_EXPIRATION_DELTA'] = timedelta(seconds=7200)
 jwt = JWTManager(app)
+
 
 
 # @app.route('/')
