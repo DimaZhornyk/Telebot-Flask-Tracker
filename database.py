@@ -1,6 +1,6 @@
 import pymongo as pymongo
 
-client = pymongo.MongoClient("mongodb+srv://admin:SBAadmin@sba-p1w2n.mongodb.net/test?retryWrites=true&w=majority")
+client = pymongo.MongoClient("databseURL")
 db = client.main
 
 
