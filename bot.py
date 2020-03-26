@@ -3,7 +3,7 @@ import time
 import telebot
 from database import Locations, Workers, History, db
 
-bot = telebot.TeleBot('973520242:AAH8WeGRmUNqKzYDdM1PCURHoojkNYWATwU')
+bot = telebot.TeleBot('botid')
 
 globaltime = {}
 
