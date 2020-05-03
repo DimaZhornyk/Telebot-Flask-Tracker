@@ -1,4 +1,4 @@
-# Telebot-Flask-Tracker
+# Telebot-Flask-Tracker (Flask, Mongo, Svelte, Telebot)
 ---
 ## Endpoints:
 * ### /login(POST)         example body: {"username": "admin", "password": "admin"}, returns you a JWT token
